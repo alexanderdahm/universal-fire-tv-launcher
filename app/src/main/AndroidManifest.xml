@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        Package visibility (Android 11 / API 30 behaviour change).
+        The app targets API 30, so it must declare what it wants to see before
+        PackageManager resolves anything. Declaring the two launcher intents
+        rather than a fixed package keeps the launcher generic: it can see every
+        app that exposes a launchable activity, which is exactly the set it can
+        start - both the configured target and the picker list.
+        Fire OS 5 (API 22) ignores this block, it is forward compatibility only.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <!--
+        Fire TV / Android TV hardware declarations.
+        Everything is optional so the APK installs on TV devices and on phones,
+        and so Fire OS 5 never rejects it. android.software.leanback MUST stay
+        required="false": Fire OS 5 devices do not report that feature.
+    -->
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.faketouch"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.gamepad"
+        android:required="false" />
+
+    <application
+        android:allowBackup="false"
+        android:banner="@drawable/banner"
+        android:hardwareAccelerated="true"
+        android:icon="@mipmap/ic_launcher"
+        android:isGame="false"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.UniversalLauncher">
+
+        <activity
+            android:name=".MainActivity"
+            android:banner="@drawable/banner"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:launchMode="singleTask"
+            android:noHistory="true"
+            android:theme="@style/Theme.UniversalLauncher">
+
+            <!-- Fire TV / Android TV home screen entry. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+
+            <!-- Classic launcher entry (Fire OS "Apps" grid, phones, tablets). -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            Only reached when TARGET_PACKAGE is empty; started by MainActivity,
+            never from outside, hence exported="false".
+        -->
+        <activity
+            android:name=".AppPickerActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.UniversalLauncher.Picker" />
+    </application>
+
+</manifest>

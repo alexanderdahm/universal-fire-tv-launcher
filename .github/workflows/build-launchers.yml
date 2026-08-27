@@ -1,0 +1,119 @@
+name: Build launcher matrix
+
+# Builds one APK per configured target app. Every job runs the same code base
+# and only injects different BuildConfig values, which is exactly how a
+# rebranded launcher is produced locally.
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.launcher.name }} launcher
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        launcher:
+          - name: Plex
+            package: com.plexapp.android
+            label: Plex Launcher
+            color: '#FFF08A1E'
+            suffix: .plex
+          - name: Kodi
+            package: org.xbmc.kodi
+            label: Kodi Launcher
+            color: '#FF00A8E1'
+            suffix: .kodi
+          - name: VLC
+            package: org.videolan.vlc
+            label: VLC Launcher
+            color: '#FFFF8800'
+            suffix: .vlc
+          - name: SmartTube
+            package: com.teamsmart.videomanager.tv
+            label: SmartTube Launcher
+            color: '#FFE23B3B'
+            suffix: .smarttube
+          - name: Moonlight
+            package: com.limelight
+            label: Moonlight Launcher
+            color: '#FF4CAF50'
+            suffix: .moonlight
+          # Empty target package = the universal app picker build.
+          - name: Picker
+            package: ''
+            label: TV App Picker
+            color: '#FF2F7DF6'
+            suffix: .picker
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle (with build cache)
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          # Matrix jobs share one cache entry; only read it to avoid write races.
+          cache-read-only: true
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Assemble ${{ matrix.launcher.name }} release
+        run: |
+          ./gradlew assembleRelease \
+            -PtargetPackage='${{ matrix.launcher.package }}' \
+            -PappLabel='${{ matrix.launcher.label }}' \
+            -PappIconColor='${{ matrix.launcher.color }}' \
+            -PappIdSuffix='${{ matrix.launcher.suffix }}' \
+            --stacktrace
+
+      - name: Rename APK
+        run: |
+          mkdir -p artifacts
+          mv app/build/outputs/apk/release/app-release.apk \
+             "artifacts/UniversalLauncher-${{ matrix.launcher.name }}.apk"
+
+      - name: Upload ${{ matrix.launcher.name }} APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: UniversalLauncher-${{ matrix.launcher.name }}
+          path: artifacts/UniversalLauncher-${{ matrix.launcher.name }}.apk
+          if-no-files-found: error
+          retention-days: 30
+
+  bundle:
+    name: Bundle all APKs
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download every launcher APK
+        uses: actions/download-artifact@v4
+        with:
+          path: apks
+          pattern: UniversalLauncher-*
+          merge-multiple: true
+
+      - name: Upload combined artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: UniversalLauncher-all-apks
+          path: apks/*.apk
+          if-no-files-found: error
+          retention-days: 30

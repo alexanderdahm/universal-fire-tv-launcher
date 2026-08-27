@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        launcher_icon_color is NOT defined here: it is generated from
+        APP_ICON_COLOR in app/build.gradle.kts via resValue().
+    -->
+
+    <color name="transparent">#00000000</color>
+
+    <!-- Neutral plate behind the app icons in the picker grid. -->
+    <color name="picker_card_background">#FF1B1F24</color>
+</resources>

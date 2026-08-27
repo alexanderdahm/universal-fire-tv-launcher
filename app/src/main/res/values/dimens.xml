@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Card geometry of the app picker grid. -->
+    <dimen name="app_card_width">160dp</dimen>
+    <dimen name="app_card_height">120dp</dimen>
+    <dimen name="app_card_icon_padding">16dp</dimen>
+</resources>

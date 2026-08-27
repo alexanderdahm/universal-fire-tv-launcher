@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        app_name is NOT defined here: it is generated from APP_LABEL in
+        app/build.gradle.kts via resValue(), so the tile name follows the
+        launcher configuration.
+    -->
+
+    <!-- Shown when the configured app is missing or exposes no launchable activity. -->
+    <string name="message_cannot_launch">%1$s is not installed or cannot be launched.</string>
+
+    <!-- Picker mode: the device reported no launchable applications at all. -->
+    <string name="message_no_apps_found">No launchable applications were found.</string>
+</resources>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Entry point theme: fully transparent and chrome free.
+        MainActivity never draws anything, so there is no splash screen, no
+        action bar and no window background to flash before the target app
+        appears.
+    -->
+    <style name="Theme.UniversalLauncher" parent="Theme.AppCompat.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+    </style>
+
+    <!--
+        Picker theme: the Leanback vertical grid needs a Theme.Leanback
+        derived theme for its title view, focus highlights and grid styling.
+    -->
+    <style name="Theme.UniversalLauncher.Picker" parent="Theme.Leanback">
+        <item name="android:colorPrimary">@color/launcher_icon_color</item>
+    </style>
+</resources>
