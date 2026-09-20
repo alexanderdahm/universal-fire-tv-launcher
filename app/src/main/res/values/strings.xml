@@ -11,4 +11,19 @@
 
     <!-- Picker mode: the device reported no launchable applications at all. -->
     <string name="message_no_apps_found">No launchable applications were found.</string>
+
+    <!--
+        Autostart. The grid title carries the current state, so the setting is
+        visible without opening anything; the dialog is only reached by holding
+        OK on a card.
+    -->
+    <string name="title_autostart_hint">%1$s — hold OK on an app for autostart</string>
+    <string name="title_autostart_active">%1$s — autostart: %2$s</string>
+    <string name="autostart_badge">Autostart app</string>
+    <string name="autostart_none">No autostart app is configured.</string>
+    <string name="autostart_current">Currently set to start after boot: %1$s.</string>
+    <string name="action_set_autostart">Set as autostart app</string>
+    <string name="action_disable_autostart">Disable autostart</string>
+    <string name="message_autostart_set">%1$s will start automatically after the next Fire TV boot.</string>
+    <string name="message_autostart_disabled">Autostart disabled.</string>
 </resources>

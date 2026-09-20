@@ -2,6 +2,58 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+### Added
+
+* **Autostart after a Fire TV boot (new feature).** One installed app can be configured
+  to start automatically once the device has booted:
+  * `AutostartSettings` — the setting itself, stored in a single `SharedPreferences`
+    file (`universal_launcher_settings`, keys `autostart_enabled` and
+    `autostart_package`). Exactly one package, so picking another app replaces the
+    previous choice; `disable()` switches it off; `launchablePackage()` resolves the
+    stored package and drops it when the app is gone.
+  * `BootReceiver` — manifest declared receiver for `android.intent.action.BOOT_COMPLETED`
+    (`exported="true"`, as a system broadcast requires). It resolves the configured
+    package and starts it via the existing `AppLauncher.launch()`, after a 3 s delay
+    (`AUTOSTART_DELAY_MS`) held open with `goAsync()`; repeated broadcasts are ignored by
+    a one shot guard, and a failing launch is logged, never thrown.
+  * `android.permission.RECEIVE_BOOT_COMPLETED` in `AndroidManifest.xml`.
+  * Picker UI: holding OK on a card opens a small confirmation dialog offering
+    *Set as autostart app* / *Disable autostart*; the grid title shows the configured app
+    (or the hint), and its card shows *Autostart app* instead of the package name. D-pad
+    only, no new screen, no new visual language.
+  * An autostart app that has been uninstalled is cleared when the picker loads.
+* **Local unit tests** (`app/src/test`): `AutostartSettingsTest` (11 tests) and
+  `BootReceiverLogicTest` (6 tests), with a hand written `FakeSharedPreferences` — no
+  mocking framework, no Robolectric. New dependency: `junit:junit:4.13.2`
+  (`testImplementation` only), plus `testOptions.unitTests.isReturnDefaultValues = true`.
+
+### Changed
+
+* `AppCardPresenter` takes an `isAutostartApp` predicate and an `onLongClicked` callback
+  (both default to no-ops); short clicks still start the app, unchanged.
+* `AppPickerFragment` owns the autostart dialog, the title state and the cleanup of a
+  stale configuration.
+* `README.md` — new *Autostart after a Fire TV boot* section, updated project structure
+  and a note on running the unit tests.
+
+### Verified
+
+* `./gradlew testDebugUnitTest` — **17 tests, 0 failures**.
+* `./gradlew assembleDebug lintDebug` and `./gradlew assembleRelease` —
+  **BUILD SUCCESSFUL**; lint reports only the pre-existing `ExpiredTargetSdkVersion`
+  error (intentional, `abortOnError = false`) and six pre-existing warnings, nothing from
+  the new code.
+
+### Limitation
+
+* Android 10+ (Fire OS 8 is Android 11) restricts background activity starts, which is
+  what a boot receiver does. Depending on the Fire OS build the start may be refused by
+  the system; the app treats that as a failed launch and logs it instead of crashing.
+
+---
+
 ## [2.0.0] — Universal Fire TV Launcher
 
 Refactor of the single purpose *Plex Launcher* into a reusable, configurable launcher

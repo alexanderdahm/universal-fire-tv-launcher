@@ -109,6 +109,15 @@ android {
         // targetSdk 30 is required for Fire OS 5 and trips ExpiredTargetSdkVersion.
         abortOnError = false
     }
+
+    testOptions {
+        unitTests {
+            // Local JVM tests run against the stubbed android.jar; returning
+            // defaults instead of throwing keeps them free of a mocking
+            // framework.
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 dependencies {
@@ -117,6 +126,9 @@ dependencies {
 
     // D-pad friendly grid used by the app picker on TV devices.
     implementation("androidx.leanback:leanback:1.0.0")
+
+    // Local unit tests; no mocking framework, the fakes are written by hand.
+    testImplementation("junit:junit:4.13.2")
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

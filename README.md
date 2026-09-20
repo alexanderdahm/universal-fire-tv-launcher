@@ -10,6 +10,9 @@ decided at build time:
 * **Picker mode** — when no target package is configured, the tile opens a Leanback
   grid of *every* launchable app on the device; selecting one starts it.
 
+In picker mode one of those apps can additionally be set as the **autostart app**: it is
+started automatically a few seconds after the Fire TV has booted.
+
 Turning this project into a launcher for a different app means changing three
 values in `app/build.gradle.kts` — no code, no artwork, no manifest edits.
 
@@ -20,6 +23,7 @@ values in `app/build.gradle.kts` — no code, no artwork, no manifest edits.
 - [Project overview](#project-overview)
 - [Compatibility](#compatibility)
 - [Configuration — build a launcher for another app](#configuration--build-a-launcher-for-another-app)
+- [Autostart after a Fire TV boot](#autostart-after-a-fire-tv-boot)
 - [Project structure](#project-structure)
 - [How it works](#how-it-works)
 - [Build instructions](#build-instructions)
@@ -145,6 +149,47 @@ the label, and the next build produces matching artwork for every density bucket
 including the banner text. The adaptive icon (API 26+) picks up the same colour through
 `@color/launcher_icon_color`.
 
+## Autostart after a Fire TV boot
+
+In picker mode the launcher can start one installed app automatically after the Fire TV
+has booted — the behaviour Televizo offers as a checkbox inside the app.
+
+**Setting it up, remote only:**
+
+1. Open the launcher, move the focus to an app card.
+2. **Hold OK** on that card. A dialog shows what is configured right now and offers
+   *Set as autostart app* (or *Disable autostart* when that app is already the one).
+3. Confirm. A toast states *“&lt;app&gt; will start automatically after the next Fire TV
+   boot.”*
+
+The grid title always shows the current state — `Universal Launcher — autostart: Kodi`,
+or the hint when nothing is configured — and the configured card shows *Autostart app*
+instead of its package name. At most one app can be set: picking another one replaces the
+previous choice, and *Disable autostart* switches the feature off again.
+
+**How it works:**
+
+| Piece | Behaviour |
+| --- | --- |
+| Storage | `AutostartSettings` — one `SharedPreferences` file (`universal_launcher_settings`) holding `autostart_enabled` and `autostart_package`. No database. |
+| Trigger | `BootReceiver`, a manifest declared `BroadcastReceiver` for `android.intent.action.BOOT_COMPLETED`, with the `RECEIVE_BOOT_COMPLETED` permission (normal, granted at install time). |
+| Delay | 3 s (`BootReceiver.AUTOSTART_DELAY_MS`). Fire TV is still starting system components and its home screen right after the broadcast; starting immediately risks being pushed straight back. `goAsync()` keeps the process alive across the delay, well inside the ~10 s a receiver may take. |
+| Launch | `AppLauncher.launch()` — the exact same resolution and start path the picker and the single app mode use. The receiver never opens the launcher itself. |
+| Missing app | An uninstalled package, or one without a launchable activity, is dropped from the settings instead of failing: the boot is silent, and the picker shows no autostart app any more. |
+| Repeated broadcast | A one shot guard makes a second `BOOT_COMPLETED` in the same process a no-op. |
+
+**Fire TV limitations:**
+
+* Fire OS 8 is Android 11, and Android 10+ restricts *background activity starts*. A boot
+  receiver starting an activity is exactly that, so the start can be silently refused by
+  the system depending on the Fire OS build and its launcher policy. The app handles this
+  as a failed launch (logged under the `UniversalLauncher` tag, no crash) — there is no
+  API a sideloaded app can use to force it.
+* The setting lives in credential encrypted storage, so the receiver is deliberately
+  **not** `directBootAware`: it runs on `BOOT_COMPLETED`, not on `LOCKED_BOOT_COMPLETED`.
+* Autostart is configured from the picker grid, so it is available in picker builds
+  (`targetPackage` empty). A single app build has no UI to pick from.
+
 ## Project structure
 
 ```
@@ -166,11 +211,17 @@ including the banner text. The adaptive icon (API 26+) picks up the same colour 
 │       │   ├── MainActivity.kt             invisible entry point / router
 │       │   ├── AppPickerActivity.kt        Leanback host
 │       │   ├── AppPickerFragment.kt        vertical grid
-│       │   └── AppCardPresenter.kt         card rendering
+│       │   ├── AppCardPresenter.kt         card rendering
+│       │   ├── AutostartSettings.kt        the autostart setting (SharedPreferences)
+│       │   └── BootReceiver.kt             BOOT_COMPLETED → start the autostart app
 │       └── res
 │           ├── drawable/ic_launcher_foreground.xml
 │           ├── mipmap-anydpi-v26/ic_launcher{,_round}.xml
 │           └── values/{colors,dimens,strings,themes}.xml
+│   └── src/test/java/com/example/universallauncher
+│       ├── AutostartSettingsTest.kt        autostart persistence + cleanup
+│       ├── BootReceiverLogicTest.kt        the decisions BootReceiver makes
+│       └── FakeSharedPreferences.kt        in memory preferences for the tests
 ├── build.gradle.kts
 ├── gradle/wrapper/              Gradle wrapper (checked in)
 ├── gradlew / gradlew.bat
@@ -197,6 +248,11 @@ and finishes. The grid is filled on a background thread (package scanning and ic
 loading are slow on a Fire TV Stick), and a card click starts the app through
 `AppLauncher.start()` — the same launch path, no duplicated logic.
 
+**Autostart** (optional, picker mode): `BootReceiver` receives `BOOT_COMPLETED`, reads
+`AutostartSettings`, checks that the stored package still resolves to a launch intent and
+starts it 3 s later through `AppLauncher.launch()` — see
+[Autostart after a Fire TV boot](#autostart-after-a-fire-tv-boot).
+
 Deprecated `PackageManager` overloads are avoided on modern devices: the API 33+ flag
 based methods are used where available, the legacy int-flag overloads — the only ones
 Fire OS 5 has — stay behind an explicit `Build.VERSION.SDK_INT` check.
@@ -221,6 +277,12 @@ Artifacts:
 ```
 app/build/outputs/apk/release/app-release.apk
 app/build/outputs/apk/debug/app-debug.apk
+```
+
+Local unit tests (plain JVM, JUnit 4, no device and no emulator needed):
+
+```bash
+./gradlew testDebugUnitTest
 ```
 
 Both are signed with the **debug keystore** (`~/.android/debug.keystore`, created on the
