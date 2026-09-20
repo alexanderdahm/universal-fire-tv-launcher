@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build:
-    name: Assemble release APK (default configuration)
+    name: Unit tests + release APK (default configuration)
     runs-on: ubuntu-latest
 
     steps:
@@ -32,6 +32,23 @@ jobs:
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
+
+      - name: Run unit tests
+        # Local JVM tests (JUnit 4, no emulator): the autostart settings and
+        # the logic behind the boot receiver. Runs before the APK is built so a
+        # failing test fails the job early.
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Upload unit test report
+        # Only interesting when something broke; the HTML report says which
+        # assertion failed.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: app/build/reports/tests/testDebugUnitTest
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Assemble release
         # Uses the defaults from app/build.gradle.kts, i.e. the universal app

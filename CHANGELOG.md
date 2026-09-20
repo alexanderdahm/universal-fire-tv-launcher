@@ -35,6 +35,8 @@ All notable changes to this project are documented here.
   (both default to no-ops); short clicks still start the app, unchanged.
 * `AppPickerFragment` owns the autostart dialog, the title state and the cleanup of a
   stale configuration.
+* `.github/workflows/android.yml` — runs `testDebugUnitTest` before `assembleRelease`
+  and uploads the test report when a test fails.
 * `README.md` — new *Autostart after a Fire TV boot* section, updated project structure
   and a note on running the unit tests.
 

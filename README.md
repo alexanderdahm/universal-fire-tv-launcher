@@ -307,8 +307,10 @@ green.
 Two workflows, both requiring **no signing secrets**:
 
 **`.github/workflows/android.yml`** — plain CI. `ubuntu-latest`, Temurin JDK 17,
-`gradle/actions/setup-gradle@v3` for dependency/distribution caching, `assembleRelease`
-with the default configuration, uploads `UniversalLauncher-default-apk`.
+`gradle/actions/setup-gradle@v3` for dependency/distribution caching, then
+`testDebugUnitTest` followed by `assembleRelease` with the default configuration. It
+uploads `UniversalLauncher-default-apk`, plus the HTML test report as `unit-test-report`
+when a test fails.
 
 **`.github/workflows/build-launchers.yml`** — the launcher matrix. One job per target
 app, each injecting its own `-PtargetPackage`, `-PappLabel`, `-PappIconColor` and
