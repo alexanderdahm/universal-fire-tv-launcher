@@ -113,6 +113,14 @@ identical results:
   -PappLabel="Kodi Launcher" \
   -PappIconColor="#FF00A8E1" \
   -PappIdSuffix=".kodi"
+
+# Plex, starting itself after every Fire TV boot
+./gradlew assembleRelease \
+  -PtargetPackage=com.plexapp.android \
+  -PappLabel="Plex Launcher" \
+  -PappIconColor="#FFF08A1E" \
+  -PappIdSuffix=".plex" \
+  -Pautostart=true
 ```
 
 Common target packages:
@@ -178,6 +186,10 @@ previous choice, and *Disable autostart* switches the feature off again.
 | Missing app | An uninstalled package, or one without a launchable activity, is dropped from the settings instead of failing: the boot is silent, and the picker shows no autostart app any more. |
 | Repeated broadcast | A one shot guard makes a second `BOOT_COMPLETED` in the same process a no-op. |
 
+**Single app builds:** a build with a `targetPackage` has no grid to pick from, so the
+setting is made at build time with `-Pautostart=true`. Such a build starts its target app
+after every boot. A choice made on the device always wins over the build time one.
+
 **Fire TV limitations:**
 
 * Fire OS 8 is Android 11, and Android 10+ restricts *background activity starts*. A boot
@@ -187,8 +199,8 @@ previous choice, and *Disable autostart* switches the feature off again.
   API a sideloaded app can use to force it.
 * The setting lives in credential encrypted storage, so the receiver is deliberately
   **not** `directBootAware`: it runs on `BOOT_COMPLETED`, not on `LOCKED_BOOT_COMPLETED`.
-* Autostart is configured from the picker grid, so it is available in picker builds
-  (`targetPackage` empty). A single app build has no UI to pick from.
+* Autostart is configured from the picker grid in picker builds (`targetPackage` empty),
+  and with `-Pautostart=true` in single app builds.
 
 ## Project structure
 

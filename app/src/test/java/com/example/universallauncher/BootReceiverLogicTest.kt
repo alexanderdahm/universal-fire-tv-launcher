@@ -76,10 +76,45 @@ class BootReceiverLogicTest {
         assertNull(resolveAutostartPackage(installed = emptySet()))
     }
 
+    @Test
+    fun `a single app build with -Pautostart starts its target package`() {
+        assertEquals(
+            PLEX,
+            resolveAutostartPackage(installed = setOf(PLEX), buildTimePackage = PLEX)
+        )
+    }
+
+    @Test
+    fun `a build time target is ignored while it is not installed`() {
+        assertNull(resolveAutostartPackage(installed = emptySet(), buildTimePackage = PLEX))
+    }
+
+    @Test
+    fun `the app the user picked wins over the build time target`() {
+        settings.setAutostartApp(KODI)
+
+        assertEquals(
+            KODI,
+            resolveAutostartPackage(installed = setOf(PLEX, KODI), buildTimePackage = PLEX)
+        )
+    }
+
+    @Test
+    fun `a picker build without a build time target starts nothing on its own`() {
+        assertNull(resolveAutostartPackage(installed = setOf(PLEX), buildTimePackage = null))
+    }
+
     /**
      * What `BootReceiver.onReceive()` does with the settings, with the
      * `PackageManager` lookup replaced by a fixed set of installed packages.
      */
-    private fun resolveAutostartPackage(installed: Set<String>): String? =
-        settings.launchablePackage { candidate -> candidate in installed }
+    private fun resolveAutostartPackage(
+        installed: Set<String>,
+        buildTimePackage: String? = null
+    ): String? = autostartPackage(settings, buildTimePackage) { candidate -> candidate in installed }
+
+    private companion object {
+        const val PLEX = "com.plexapp.android"
+        const val KODI = "org.xbmc.kodi"
+    }
 }

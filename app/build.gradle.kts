@@ -25,7 +25,8 @@ plugins {
 //          -PtargetPackage=org.xbmc.kodi \
 //          -PappLabel="Kodi Launcher" \
 //          -PappIconColor="#FF00A8E1" \
-//          -PappIdSuffix=".kodi"
+//          -PappIdSuffix=".kodi" \
+//          -Pautostart=true
 // ═══════════════════════════════════════════════════════════════════════════
 
 /** Package of the app that should be started. Empty = show the app picker. */
@@ -39,6 +40,14 @@ val appIconColor: String = launcherProperty("appIconColor", "#FF2F7DF6")
 
 /** Appended to the application id so several launchers can coexist. */
 val appIdSuffix: String = launcherProperty("appIdSuffix", "")
+
+/**
+ * Single app builds have no picker to configure autostart from, so they carry
+ * the setting in the build: `-Pautostart=true` makes such a build start its
+ * target app once the Fire TV has booted. Picker builds ignore it - there the
+ * user picks the autostart app on the device.
+ */
+val autostart: Boolean = launcherProperty("autostart", "false").toBoolean()
 
 /** Application id all builds are derived from. */
 val baseApplicationId = "com.example.universallauncher"
@@ -67,6 +76,7 @@ android {
         buildConfigField("String", "TARGET_PACKAGE", "\"$targetPackage\"")
         buildConfigField("String", "APP_LABEL", "\"$appLabel\"")
         buildConfigField("String", "APP_ICON_COLOR", "\"$appIconColor\"")
+        buildConfigField("boolean", "AUTOSTART_TARGET", "$autostart")
 
         // The same values as resources: the launcher tile label and the colour
         // used by the adaptive icon (API 26+) and by the picker UI.

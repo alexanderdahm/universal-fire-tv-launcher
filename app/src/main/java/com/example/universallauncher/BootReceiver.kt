@@ -29,8 +29,10 @@ class BootReceiver : BroadcastReceiver() {
         }
 
         val appContext = context.applicationContext
-        val settings = AutostartSettings(appContext)
-        val packageName = settings.launchablePackage { candidate ->
+        val packageName = autostartPackage(
+            settings = AutostartSettings(appContext),
+            buildTimePackage = LauncherConfig.bootAutostartPackage
+        ) { candidate ->
             AppLauncher.launchIntentFor(appContext.packageManager, candidate) != null
         }
 
@@ -74,6 +76,20 @@ class BootReceiver : BroadcastReceiver() {
         private val bootGuard = OneShotGuard()
     }
 }
+
+/**
+ * The package to start after a boot, or `null` when there is nothing to start.
+ *
+ * The app the user picked wins; [buildTimePackage] is the fallback for single
+ * app builds assembled with `-Pautostart=true`, which have no picker to choose
+ * from. Either way the package has to pass [isLaunchable].
+ */
+internal fun autostartPackage(
+    settings: AutostartSettings,
+    buildTimePackage: String?,
+    isLaunchable: (String) -> Boolean
+): String? = settings.launchablePackage(isLaunchable)
+    ?: buildTimePackage?.takeIf(isLaunchable)
 
 /** `true` only for the boot broadcast this receiver is registered for. */
 internal fun isBootCompletedAction(action: String?): Boolean =

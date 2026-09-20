@@ -23,4 +23,14 @@ object LauncherConfig {
      * offer the list of every launchable application on the device.
      */
     val isSingleAppLauncher: Boolean = targetPackage.isNotEmpty()
+
+    /**
+     * Package this build starts after a boot on its own, or `null`.
+     *
+     * A single app build has no picker to configure autostart from, so the
+     * choice is made at build time with `-Pautostart=true`. A picker build has
+     * no target package and always keeps the user's on device choice instead.
+     */
+    val bootAutostartPackage: String? =
+        targetPackage.takeIf { BuildConfig.AUTOSTART_TARGET && isSingleAppLauncher }
 }

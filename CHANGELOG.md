@@ -24,6 +24,9 @@ All notable changes to this project are documented here.
     (or the hint), and its card shows *Autostart app* instead of the package name. D-pad
     only, no new screen, no new visual language.
   * An autostart app that has been uninstalled is cleared when the picker loads.
+  * `-Pautostart=true` for single app builds, which have no picker to choose from:
+    `BuildConfig.AUTOSTART_TARGET` -> `LauncherConfig.bootAutostartPackage`, used by
+    `BootReceiver` as the fallback behind the user's own choice.
 * **Local unit tests** (`app/src/test`): `AutostartSettingsTest` (11 tests) and
   `BootReceiverLogicTest` (6 tests), with a hand written `FakeSharedPreferences` — no
   mocking framework, no Robolectric. New dependency: `junit:junit:4.13.2`
@@ -42,7 +45,7 @@ All notable changes to this project are documented here.
 
 ### Verified
 
-* `./gradlew testDebugUnitTest` — **17 tests, 0 failures**.
+* `./gradlew testDebugUnitTest` — **21 tests, 0 failures**.
 * `./gradlew assembleDebug lintDebug` and `./gradlew assembleRelease` —
   **BUILD SUCCESSFUL**; lint reports only the pre-existing `ExpiredTargetSdkVersion`
   error (intentional, `abortOnError = false`) and six pre-existing warnings, nothing from
